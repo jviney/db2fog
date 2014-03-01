@@ -6,12 +6,9 @@ require 'timecop'
 require 'active_record'
 require 'db2fog'
 
-if File.exists?(File.dirname(__FILE__) + '/db_config.rb')
-  require File.dirname(__FILE__) + '/db_config.rb'
-else
-  puts "db_config.rb does not exist - exiting"
-  exit 1
-end
+require File.dirname(__FILE__) + '/db_setup.rb'
+
+# run_query_system(DBQueries[:init_sql])
 
 DB2Fog.config = {
   :provider   => 'Local',
