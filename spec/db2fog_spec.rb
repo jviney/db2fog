@@ -5,6 +5,14 @@ end
 
 describe DB2Fog do
 
+  def reset_schema
+    user_query(DBQueries[:reset])
+  end
+
+  def backup_files
+    Dir.entries(storage_dir).select { |f| f[0,1] != "."}.sort
+  end
+
   let(:storage_dir) { File.join(File.dirname(__FILE__), "storage", "db2fog-test") }
 
   before :each do
@@ -12,18 +20,10 @@ describe DB2Fog do
     FileUtils.mkdir_p(storage_dir)
   end
 
-  def load_schema
-    run_query_user(DBQueries[:reset])
-  end
-
-  def backup_files
-    Dir.entries(storage_dir).select { |f| f[0,1] != "."}.sort
-  end
-
   describe "backup()" do
     it 'can save a backup' do
       db2fog = DB2Fog.new
-      load_schema
+      reset_schema
       Person.create!(name: "Baxter")
 
       Timecop.travel(Time.utc(2011, 7, 23, 14, 10, 0)) do
@@ -35,7 +35,7 @@ describe DB2Fog do
 
     it 'can save two backups' do
       db2fog = DB2Fog.new
-      load_schema
+      reset_schema
       Person.create!(name: "Baxter")
 
       Timecop.travel(Time.utc(2011, 7, 23, 14, 10, 0)) do
@@ -51,7 +51,7 @@ describe DB2Fog do
 
     it 'can record the filename of the most recent backup' do
       db2fog = DB2Fog.new
-      load_schema
+      reset_schema
       Person.create!(name: "Baxter")
 
       Timecop.travel(Time.utc(2011, 7, 23, 12, 10, 0)) { db2fog.backup }
@@ -65,10 +65,10 @@ describe DB2Fog do
   describe "restore()" do
     it 'can save and restore a backup' do
       db2fog = DB2Fog.new
-      load_schema
+      reset_schema
       Person.create!(name: "Baxter")
       db2fog.backup
-      load_schema
+      reset_schema
       db2fog.restore
       Person.find_by_name("Baxter").should_not be_nil
     end
@@ -77,7 +77,7 @@ describe DB2Fog do
   describe "clean()" do
     it 'can remove old backups' do
       db2fog = DB2Fog.new
-      load_schema
+      reset_schema
       Person.create!(name: "Baxter")
 
       # keep 1 backup per week
@@ -108,7 +108,7 @@ describe DB2Fog do
     it 'only cleans files created by db2fog' do
       File.open("#{storage_dir}/foo.txt","wb") { |f| f.write "hello"}
       db2fog = DB2Fog.new
-      load_schema
+      reset_schema
       Person.create!(name: "Baxter")
 
       # clean up

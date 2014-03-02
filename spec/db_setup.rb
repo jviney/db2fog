@@ -6,23 +6,20 @@ DBConfig = {
 }
 
 DBQueries = {
-
   init: "CREATE ROLE #{DBConfig[:username]} LOGIN PASSWORD '#{DBConfig[:password]}';
-
-    ALTER USER #{DBConfig[:username]} CREATEDB;",
-
-  create: "CREATE DATABASE #{DBConfig[:database]};
-    GRANT ALL PRIVILEGES ON #{DBConfig[:database]} TO #{DBConfig[:username]};",
+    ALTER USER #{DBConfig[:username]} CREATEDB;
+    CREATE DATABASE #{DBConfig[:database]};
+    GRANT ALL PRIVILEGES ON DATABASE #{DBConfig[:database]} TO #{DBConfig[:username]};",
 
   reset: "DROP TABLE IF EXISTS people;
     CREATE TABLE people (name VARCHAR(255) NULL);"
 }
 
-def run_query_system(sql)
+def system_query(sql)
   `echo "#{sql}" | #{psql_system}`
 end
 
-def run_query_user(sql)
+def user_query(sql)
   `echo "#{sql}" | #{psql_user}`
 end
 
