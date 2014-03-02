@@ -8,7 +8,8 @@ require 'db2fog'
 
 require File.dirname(__FILE__) + '/db_setup.rb'
 
-# run_query_system(DBQueries[:init_sql])
+run_query_system(DBQueries[:init])
+run_query_user(DBQueries[:create])
 
 DB2Fog.config = {
   :provider   => 'Local',

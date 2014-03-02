@@ -1,23 +1,21 @@
 DBConfig = {
-  :adapter  => "postgresql",
-  :database => 'db2fog_test',
-  :user     => "test",
-  :password => ""
+  adapter: "postgresql",
+  database: "db2fog_test",
+  username: "db2fog_tester",
+  password: ""
 }
 
 DBQueries = {
 
-  init_sql: "IF NOT EXISTS (
-              SELECT *
-              FROM   pg_catalog.pg_user
-              WHERE  usename = '#{DBConfig[:user]}') THEN
+  init: "CREATE ROLE #{DBConfig[:username]} LOGIN PASSWORD '#{DBConfig[:password]}';
 
-              CREATE ROLE #{DBConfig[:user]} LOGIN PASSWORD '#{DBConfig[:password]}';
-           END IF;",
+    ALTER USER #{DBConfig[:username]} CREATEDB;",
 
-  reset_schema: "DROP TABLE IF EXISTS people;
-    CREATE TABLE people (name VARCHAR(255) NULL);
-    GRANT ALL PRIVILEGES ON people TO #{DBConfig[:user]};",
+  create: "CREATE DATABASE #{DBConfig[:database]};
+    GRANT ALL PRIVILEGES ON #{DBConfig[:database]} TO #{DBConfig[:username]};",
+
+  reset: "DROP TABLE IF EXISTS people;
+    CREATE TABLE people (name VARCHAR(255) NULL);"
 }
 
 def run_query_system(sql)
@@ -29,9 +27,9 @@ def run_query_user(sql)
 end
 
 def psql_system
-  "psql template1"
+  "psql -d template1"
 end
 
 def psql_user
-  "psql -d #{DBConfig[:database]} -U #{DBConfig[:user]}"
+  "psql -d #{DBConfig[:database]} -U #{DBConfig[:username]}"
 end

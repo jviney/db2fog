@@ -13,7 +13,7 @@ describe DB2Fog do
   end
 
   def load_schema
-    run_query_system(DBQueries[:create_schema])
+    run_query_user(DBQueries[:reset])
   end
 
   def backup_files
@@ -23,20 +23,20 @@ describe DB2Fog do
   describe "backup()" do
     it 'can save a backup' do
       db2fog = DB2Fog.new
-      # load_schema
-      Person.create!(:name => "Baxter")
+      load_schema
+      Person.create!(name: "Baxter")
 
       Timecop.travel(Time.utc(2011, 7, 23, 14, 10, 0)) do
         db2fog.backup
       end
 
-      backup_files.should == ["dump-db2fog_test-201107231410.sql.gz", "most-recent-dump-db2fog_test.txt"]
+      backup_files.should == ["dump-#{DBConfig[:database]}-201107231410.sql.gz", "most-recent-dump-#{DBConfig[:database]}.txt"]
     end
 
     it 'can save two backups' do
       db2fog = DB2Fog.new
-      # load_schema
-      Person.create!(:name => "Baxter")
+      load_schema
+      Person.create!(name: "Baxter")
 
       Timecop.travel(Time.utc(2011, 7, 23, 14, 10, 0)) do
         db2fog.backup
@@ -46,29 +46,29 @@ describe DB2Fog do
         db2fog.backup
       end
 
-      backup_files.should == ["dump-db2fog_test-201107231410.sql.gz","dump-db2fog_test-201107241410.sql.gz","most-recent-dump-db2fog_test.txt"]
+      backup_files.should == ["dump-#{DBConfig[:database]}-201107231410.sql.gz","dump-#{DBConfig[:database]}-201107241410.sql.gz","most-recent-dump-#{DBConfig[:database]}.txt"]
     end
 
     it 'can record the filename of the most recent backup' do
       db2fog = DB2Fog.new
-      # load_schema
-      Person.create!(:name => "Baxter")
+      load_schema
+      Person.create!(name: "Baxter")
 
       Timecop.travel(Time.utc(2011, 7, 23, 12, 10, 0)) { db2fog.backup }
       Timecop.travel(Time.utc(2011, 7, 23, 14, 10, 0)) { db2fog.backup }
 
-      latest = File.join(storage_dir, "most-recent-dump-db2fog_test.txt")
-      File.read(latest).should == "dump-db2fog_test-201107231410.sql.gz"
+      latest = File.join(storage_dir, "most-recent-dump-#{DBConfig[:database]}.txt")
+      File.read(latest).should == "dump-#{DBConfig[:database]}-201107231410.sql.gz"
     end
   end
 
   describe "restore()" do
     it 'can save and restore a backup' do
       db2fog = DB2Fog.new
-      # load_schema
-      Person.create!(:name => "Baxter")
+      load_schema
+      Person.create!(name: "Baxter")
       db2fog.backup
-      # load_schema
+      load_schema
       db2fog.restore
       Person.find_by_name("Baxter").should_not be_nil
     end
@@ -77,8 +77,8 @@ describe DB2Fog do
   describe "clean()" do
     it 'can remove old backups' do
       db2fog = DB2Fog.new
-      # load_schema
-      Person.create!(:name => "Baxter")
+      load_schema
+      Person.create!(name: "Baxter")
 
       # keep 1 backup per week
       Timecop.travel(Time.utc(2011, 6, 23, 14, 10, 0)) { db2fog.backup }
@@ -97,19 +97,19 @@ describe DB2Fog do
       Timecop.travel(Time.utc(2011, 7, 23, 14, 10, 0)) { db2fog.clean }
 
       backup_files.should == [
-        "dump-db2fog_test-201106231410.sql.gz",
-        "dump-db2fog_test-201107201410.sql.gz",
-        "dump-db2fog_test-201107231210.sql.gz",
-        "dump-db2fog_test-201107231410.sql.gz",
-        "most-recent-dump-db2fog_test.txt"
+        "dump-#{DBConfig[:database]}-201106231410.sql.gz",
+        "dump-#{DBConfig[:database]}-201107201410.sql.gz",
+        "dump-#{DBConfig[:database]}-201107231210.sql.gz",
+        "dump-#{DBConfig[:database]}-201107231410.sql.gz",
+        "most-recent-dump-#{DBConfig[:database]}.txt"
       ]
     end
 
     it 'only cleans files created by db2fog' do
       File.open("#{storage_dir}/foo.txt","wb") { |f| f.write "hello"}
       db2fog = DB2Fog.new
-      # load_schema
-      Person.create!(:name => "Baxter")
+      load_schema
+      Person.create!(name: "Baxter")
 
       # clean up
       Timecop.travel(Time.utc(2011, 7, 23, 14, 10, 0)) { db2fog.clean }
