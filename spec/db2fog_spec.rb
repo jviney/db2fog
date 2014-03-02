@@ -6,7 +6,7 @@ end
 describe DB2Fog do
 
   def reset_schema
-    user_query(DBQueries[:reset])
+    user_query DBQueries[:reset]
   end
 
   def backup_files
