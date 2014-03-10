@@ -152,7 +152,7 @@ class DB2Fog
       cmd = ''
       cmd += " -U #{@credentials[:username]} " unless @credentials[:username].nil?
       cmd += " -h '#{@credentials[:host]}'"    unless @credentials[:host].nil?
-      cmd += " -W '#{@credentials[:password]}' " if @credentials[:password] 
+      cmd += " -w"
       cmd += " #{@credentials[:database]}"
     end
 
@@ -160,13 +160,8 @@ class DB2Fog
       cmd = ''
       cmd += " -U #{@credentials[:username]} " unless @credentials[:username].nil?
       cmd += " -h '#{@credentials[:host]}'"    unless @credentials[:host].nil?
-      cmd += " -w"                             if     pg_version >= 9
+      cmd += " -w"
       cmd += " -d #{@credentials[:database]}"
-    end
-
-    def pg_version
-      opts = database_options || {}
-      opts[:pg_version] || 9
     end
 
     def database_options
